@@ -200,6 +200,72 @@ int get_first(int v , int tl , int tr , int l , int r , int x )
     
 }
 
+//Saving entire subtrees in each node. We can call build once. 
+//But while updating, we cannot call combine arrays. We have to update only the arrays.
+//In the t-array, store vectors/maps/multisets belonging to that segment.
+
+//Example: Find the smallest number greater or equal to a specified number. No modification queries.
+
+const int MAXN = 1e4;
+vector< int > t[4*MAXN];
+
+vector<int> t[4*MAXN];
+
+void build(int a[], int v, int tl, int tr) {
+    if (tl == tr) {
+        t[v] = vector<int>(1, a[tl]);
+    } else { 
+        int tm = (tl + tr) / 2;
+        build(a, v*2, tl, tm);
+        build(a, v*2+1, tm+1, tr);
+        merge(t[v*2].begin(), t[v*2].end(), t[v*2+1].begin(), t[v*2+1].end(),
+              back_inserter(t[v])); //STL merge function #back_inserter: The vector to be inserted into
+    }
+}
+
+//Here the range (l,r) can be broken into (max log(n)) sub ranges, and two range can be comnbined in O(1) i.e minimuum of returned value.
+
+int query(int v, int tl, int tr, int l, int r, int x) {
+    
+    if (l > r)
+        return 2e9;
+    if (l == tl && r == tr) {
+        auto pos = lower_bound(t[v].begin(), t[v].end(), x);
+        if (pos != t[v].end())
+            return *pos;
+        return 2e9;
+    }
+    int tm = (tl + tr) / 2;
+    return min(query(v*2, tl, tm, l, min(r, tm), x), 
+               query(v*2+1, tm+1, tr, max(l, tm+1), r, x));
+}
+
+
+//Find lower_bound in a range (l,r) with update querries. Here t-array needs to store multiset, to remove and update.
+
+multiset<int> t[4*MAXN];
+
+//Go down the tree and modify all the multiset. Do not merge as in other update queries as then it will be TLE.
+
+void update(int v , int tl , int tr , int pos , int nval)
+{   
+    t[v].erase(t[v].find(a[pos])); //Remove old value
+    t[v].insert(nval);
+    if(tl == tr)
+    {
+        a[pos] = nval; 
+    }
+    else
+    {
+        int tm = (tl+tr)/2;
+        if(pos<= tm)
+        update(2*v  , tl ,tm , pos , nval);
+        else update(2*v + 1 , tm+1 , tr , pos , nval);
+    }
+}
+
+
+
 
 
 
